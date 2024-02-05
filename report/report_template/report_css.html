@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <!-- Bootstrap -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <style>
+            .table-condensed{
+                font-size: 12px;
+            }
+
+            h1, h2 {
+                margin-bottom: 20px;
+                margin-top: 10px;
+            }
+        </style>
+</head>
+<body>
+    <div class = "ml-5 mb-5">
+        <h1>{{ title }}</h1>
+        <h2>Metrics</h2>
+            <div class="row">
+                <div class="col-auto">
+                <h3>Genus</h3>
+                {{ metric_table_genus }}
+                </div>
+                <div class="col-auto">
+                <h3> Species</h3>
+                {{ metric_table_species }}
+                 </div>
+            </div>
+
+        <h2>Numbers</h2>
+            <p>no_hit: No hit was found for the read.<br>
+            Ambigious: Read had two or more equally well hits.<br>
+            Unclassified: Read has no hit on genus/species level, but does have a hit on a higher level (e.g. family).<br>
+            Missing_genus: Read has a hit with a specified species, but a genus name is missing (often with virusses).<br>
+            Not_distributed [Bracken specific]: Read could not be distributed down (due to absence of lower tax level or given threshold).<br>
+            Rounding_error [Bracken specific]: Due to re-estimation based on Bayes' theorem, the number of assigned reads are fractions.
+                                               In practice, however, these fractions are rounded leading to a loss of reads.</p>
+            <div class="row">
+                <div class="col-auto">
+                    <h3>Genus</h3>
+                    {{ number_table_genus }}
+                </div>
+                <div class="col-auto">
+                    <h3> Species</h3>
+                    {{ number_table_species }}
+                </div>
+            </div>
+
+        <h2>Top 15 per classifier</h2>
+            <p>Number of reads for the top 15 genera/species.<br>
+                Marker classifiers not included as they do not output raw count.
+            </p>
+            <div class="row">
+                <div class="col-auto">
+                    <h3>Genus</h3>
+                    {{ top15_genus }}
+                </div>
+                <div class="col-auto">
+                    <h3> Species</h3>
+                    {{ top15_species }}
+                </div>
+            </div>
+
+        <h2>Classification Bar /w Unclassified</h2>
+            <p>Bar plot of the relative abundance of the ground truth species/genera, the
+            misclassified reads and the others. <br> The relative abundance for each species/genus is calculated by
+            dividing the number of clasified reads of a certain species/genus by the total number of reads </p>
+            <div class="row">
+                <div class="col-auto">
+                    <h3>Genus</h3>
+                    {{ classification_bar_w_uc_genus }}
+                </div>
+                <div class="col-auto">
+                    <h3> Species</h3>
+                    {{ classification_bar_w_uc_species }}
+                </div>
+            </div>
+
+        <h2>Classification Bar w/o Unclassified</h2>
+        <p>Bar plot of the relative abundance of the ground truth species/genera and the
+            misclassified reads. <br>The relative abundance for each species/genus is calculated by
+            dividing the number of clasified reads of a certain species/genus by the total number of reads EXCLUDING
+        unclassified reads.</p>
+            <div class="row">
+                <div class="col-auto">
+                    <h3>Genus</h3>
+                    {{ classification_bar_genus }}
+                </div>
+                <div class="col-auto">
+                    <h3> Species</h3>
+                    {{ classification_bar_species }}
+                </div>
+            </div>
+
+        <h2>ECDF</h2>
+        <p>An ECDF plot displays the empirical cumulative distribution.<br>
+        The x-axis represents the relative abundace of species/genera (excluding unclassified reads) and the y-axis
+        represents the number of species/genera (not the reads!).<br>The plot gives an overview of the distribution
+        of relative abundance of the species/genera.</p>
+            <div class="row">
+                <div class="col-auto">
+                    <h3>Genus</h3>
+                    {{ ecdf_genus }}
+                </div>
+                <div class="col-auto">
+                    <h3> Species</h3>
+                    {{ ecdf_species }}
+                </div>
+            </div>
+
+        <h2>TPR FPs Curve</h2>
+        <p>The TPR FPs plot displays the change of the true positive rate and the number of false positive
+        when shifting the relative abundance threshold.<br>If the relative abundance of a species/genus is below or above
+        the set threshold, it is marked as negative or positive respectively (either false or positive, depending on
+        the ground truth).<br>Thus, increasing the threshold is a tradeoff between eliminating false positive and
+        lowering the true positive rate.</p>
+            <div class="row">
+                <div class="col-auto">
+                    <h3>Genus</h3>
+                    {{ tpr_fps_curve_genus }}
+                </div>
+                 <div class="col-auto">
+                    <h3>Species</h3>
+                    {{ tpr_fps_curve_species }}
+                 </div>
+            </div>
+
+        <h2>Precision - Recall</h2>
+        <p>The precision-recall curve shows the tradeoff between precision and recall for different thresholds.<br>
+        When increasing the threshold, the precision increases (fewer FPs), but the recall decreases (fewer TPs)</p>
+         <div class="row">
+             <div class="col-auto">
+                <h3>Genus</h3>
+                {{ pr_curve_genus }}
+            </div>
+             <div class="col-auto">
+                <h3>Species</h3>
+                {{ pr_curve_species }}
+             </div>
+         </div>
+
+        <h2>L1 Heatmap</h2>
+        <p>The L1-distance (Manhattan distance) between two points is the sum of the absolute difference of the
+        coordinates.<br>The number of coordinates of a point depends on the number of species/genera in the ground truth
+        and in the sample (excluding unclassified).<br>The minimum value is 0 meaning the points are positioned equally.<br>The higher the L1-value,
+        the more different the composition of species/genera versus the ground truth.</p>
+         <div class="row">
+             <div class="col-auto">
+                <h3>Genus</h3>
+                {{ l1_heatmap_genus }}
+            </div>
+             <div class="col-auto">
+                <h3>Species</h3>
+                {{ l1_heatmap_species }}
+             </div>
+         </div>
+    </div>
+</body>
+</html>
