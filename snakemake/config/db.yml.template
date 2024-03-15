@@ -1,0 +1,10 @@
+# {classifier}: {path to database}
+'kaiju': ''
+'kraken2': ''
+'bracken': ''
+'taxonomy': ''
+'kma': ''
+'metaphlan': ''
+'centrifuge': ''
+'mmseqs2': ''
+'motus': ''
