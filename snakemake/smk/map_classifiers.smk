@@ -8,29 +8,24 @@ ROOT = Path(config['output'])
 LOGS = ROOT / 'logs'
 BENCH = ROOT / 'bench'
 PYTHON_SCRIPTS = config['python_scripts']
+CLASSIFIERS_LOCATIONS = config['locations']
+TAXONOMY_DB = CLASSIFIERS_LOCATIONS['taxonomy']['db_path']
 
 CLASS_TYPE = ['reads']
 CLASS_LEVEL = ['genus', 'species']
 # reverse bool
 filter_reads = not config['no_filter']
-use_classifiers = config['classifiers']
+USE_CLASSIFIERS = config['classifiers']
 truth_file = config['truth_file']
 
 ENV = Path('/scratch/alvanuffelen/env/')
 
 
-include: 'desamba.smk'
-include: 'kraken2.smk'  # kraken should be included before bracken
-include: 'bracken.smk'
-include: 'kma.smk' # kma should be included before ccmetagen
-include: 'ccmetagen.smk'
-include: 'mash.smk'
-include: 'metaphlan.smk'
-include: 'minimap2.smk'
-include: 'centrifuge.smk'
-include: 'mmseqs2.smk'
-include: 'kaiju.smk'
-include: 'motus.smk'
+for classifier in USE_CLASSIFIERS:
+    if classifier in ['ccmetagen', 'bracken']:
+        # It is already checked in run_map_classifiers.py if kma and kraken2 are present for ccmetagen and bracken, respectively.
+        continue
+    include: f'{classifier}.smk'
 
 rule all:
     input:
@@ -117,7 +112,7 @@ rule update_ground_truth:
     output:
         Path(truth_file).parent / '{ground_truth_type}_updated.yml'
     params:
-        TAXONOMY = config['db']['taxonomy']
+        TAXONOMY = TAXONOMY_DB
     log:
         ROOT / "logs" / "update_{ground_truth_type}.log"
     shell:
@@ -146,7 +141,7 @@ rule check_output_tax:
     output:
         temp(ROOT / "logs" / "update_output_{class_type}_{classifier}_{class_level}.log")
     params:
-        TAXONOMY=config['db']['taxonomy']
+        TAXONOMY = TAXONOMY_DB
     shell:
         """
         list_uc="no_hit|ambigious|unclassified|missing_genus|not_distributed|rounding_error"

@@ -1,3 +1,7 @@
+MMSEQS2 = CLASSIFIERS_LOCATIONS['mmseqs2']['path']
+MMSEQS2_DB = CLASSIFIERS_LOCATIONS['mmseqs2']['db_path']
+
+
 rule mmseqs2_classification:
     """
     Classifies reads/assemblies using mmseqs2
@@ -8,13 +12,12 @@ rule mmseqs2_classification:
         TSV = ROOT / 'mmseqs2' / '{class_type}' / 'classification_lca.tsv',
     threads: 64
     params:
-        db=config['db']['mmseqs2'],
         prefix = lambda wildcards: ROOT / 'mmseqs2' / wildcards.class_type / 'classification',
         tmp = lambda wildcards: ROOT / 'mmseqs2' / wildcards.class_type / 'tmp'
+        db = MMSEQS2_DB,
     shell:
         """
-        ml mmseqs2;
-        mmseqs easy-taxonomy \
+        {MMSEQS2} easy-taxonomy \
         --tax-lineage 1 \
         {input} \
         {params.db} \
@@ -72,7 +75,7 @@ rule mmseqs2_tax:
     output:
         TSV = ROOT / 'mmseqs2' / '{class_type}' / 'classification_tax.tsv'
     params:
-        TAXONOMY=config['db']['taxonomy']
+        TAXONOMY = TAXONOMY_DB
     shell:
         """
         ml taxonkit/0.15.0;
@@ -90,7 +93,6 @@ rule mmseqs2_filter:
     Split file to either taxid with genus name and taxid with species name.
     """
     input:
-        canu_output = lambda wildcards: FILENAME[wildcards.class_type],
         TSV_mmseqs = rules.mmseqs2_tax.output.TSV,
         read_count= ROOT / 'input' / 'HQ.stats'
 

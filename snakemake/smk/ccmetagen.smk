@@ -1,3 +1,5 @@
+CCMETAGEN_ENV = CLASSIFIERS_LOCATIONS['ccmetagen']['path_env']
+
 
 rule ccmetagan_filtering:
     input:
@@ -8,12 +10,13 @@ rule ccmetagan_filtering:
         output_prefix = lambda wildcards: ROOT / 'ccmetagen' / wildcards.class_type / 'results'
     shell:
         """
-        . {ENV}/bin/activate
+        . {CCMETAGEN_ENV}/bin/activate
         mkdir -p $(dirname {params.output_prefix})
         CCMetagen.py -i {input.res} \
                      -o {params.output_prefix} \
                      -r RefSeq \
-                     -m text
+                     -m text;
+        deactivate;
         """
 
 rule ccmetagen_clean:
@@ -41,7 +44,7 @@ rule ccmetagen_taxonomy:
     output:
         results_cleaned_tax = ROOT / 'ccmetagen' / '{class_type}' / 'results_cleaned_tax.tsv',
     params:
-        db=config['db']['taxonomy']
+        db = TAXONOMY_DB
     shell:
         """
         ml taxonkit/0.15.0;
@@ -83,3 +86,4 @@ rule ccmetagen_output:
             organism_count=organism_count.groupby(organism_count.index,sort=False).sum()
 
         organism_count.to_csv(output.TSV_ccmetagen,sep='\t',index=True,header=False)
+

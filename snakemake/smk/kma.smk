@@ -1,3 +1,5 @@
+KMA = CLASSIFIERS_LOCATIONS['kma']['path']
+KMA_DB = CLASSIFIERS_LOCATIONS['kma']['db_path']
 
 rule kma_mapping:
     input:
@@ -7,8 +9,8 @@ rule kma_mapping:
         mapstat = ROOT / 'kma' / '{class_type}' / 'kma.mapstat',
         res = ROOT / 'kma' / '{class_type}' / 'kma.res'
     params:
-        DB = config['db']['kma'],
         prefix = lambda wildcards: ROOT / 'kma' / wildcards.class_type / 'kma',
+        DB = KMA_DB,
         MP = 20,
         MRS = 0.0,
         BC = 0.7,
@@ -17,8 +19,7 @@ rule kma_mapping:
     shell:
         """
         mkdir -p {params.TMP};
-         ml kma/1.3.28;
-        kma \
+        {KMA} \
         -i {input} \
         -o {params.prefix} \
         -t_db {params.DB} \
@@ -85,11 +86,11 @@ rule kma_taxonomy:
     output:
         TSV = ROOT / 'kma' / '{class_type}' /'kma_cleaned_tax.tsv'
     params:
-        db = config['db']['taxonomy']
+        db = TAXONOMY_DB
     threads: 16
     shell:
         """
-        ml load taxonkit;
+        ml taxonkit;
         paste <(cat {input.TSV}) <(cut -f 3 {input.TSV} \
         | taxonkit lineage -j {threads} --data-dir {params.db} \
         | taxonkit reformat -j {threads} --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
@@ -100,7 +101,6 @@ rule kma_taxonomy:
 
 rule kma_output:
     input:
-        canu_output = lambda wildcards: FILENAME[wildcards.class_type],
         TSV_KMA = rules.kma_taxonomy.output.TSV,
         read_count= ROOT / 'input' / 'HQ.stats'
 
@@ -128,3 +128,7 @@ rule kma_output:
 
         # Save output
         organism_count.to_csv(output.TSV_KMA,sep='\t', index=True, header=False)
+
+if 'ccmetagen' in USE_CLASSIFIERS:
+    include: 'ccmetagen.smk'
+

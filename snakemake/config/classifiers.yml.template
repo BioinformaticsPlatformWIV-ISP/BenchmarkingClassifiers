@@ -1,0 +1,24 @@
+############
+# REQUIRED #
+############
+
+taxonomy:
+  db_path:
+
+
+
+###############
+# CLASSIFIERS #
+###############
+
+{name_tool}:
+  path:
+  db_path:
+
+ ################
+# DEPENDENCIES #
+################
+
+
+{name_tool}:
+  path:

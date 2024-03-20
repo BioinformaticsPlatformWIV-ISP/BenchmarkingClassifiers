@@ -1,3 +1,8 @@
+METAPHLAN_ENV = CLASSIFIERS_LOCATIONS['metaphlan']['path_env']
+METAPHLAN_DB = CLASSIFIERS_LOCATIONS['metaphlan']['db_path']
+BOWTIE2 = CLASSIFIERS_LOCATIONS['bowtie2']['path']
+
+
 rule metaphlan_classification:
     """
     Classifies reads/assemblies using metahplan
@@ -8,12 +13,13 @@ rule metaphlan_classification:
         TSV = ROOT / 'metaphlan' / '{class_type}' / 'classification.tsv',
         bowtie_out = ROOT / 'metaphlan' / '{class_type}' / 'classification.bow.txt'
     params:
-        db = config['db']['metaphlan'],
+        db = METAPHLAN_DB,
+        env = str(Path(METAPHLAN_ENV) / 'bin' / 'activate'),
         alignement_type = 'sensitive-local'
     shell:
         """
-        ml bowtie2/2.4.1;
-        ml metaphlan/3.0.14;
+        export PATH=""$(dirname "{BOWTIE2}")":$PATH"
+        . {params.env}
         metaphlan \
         --input_type fastq \
         --bowtie2db {params.db} \
@@ -22,7 +28,8 @@ rule metaphlan_classification:
         --bowtie2out {output.bowtie_out} \
         --unknown_estimation \
         {input} \
-        {output.TSV}
+        {output.TSV};
+        deactivate;
         """
 
 rule metaphlan_clean:
@@ -65,7 +72,7 @@ rule metaphlan_taxonomy:
     output:
         cleaned_abundance_tax = ROOT / 'metaphlan' / '{class_type}' / 'classification_cleaned_tax.tsv'
     params:
-        db=config['db']['taxonomy']
+        db=TAXONOMY_DB
     shell:
         """
         ml taxonkit;

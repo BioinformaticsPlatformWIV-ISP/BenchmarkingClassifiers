@@ -1,3 +1,6 @@
+KRAKEN2 = CLASSIFIERS_LOCATIONS['kraken2']['path']
+KRAKEN2_DB = CLASSIFIERS_LOCATIONS['kraken2']['db_path']
+
 rule kraken2_classification:
     """
     Classifies reads/assemblies using Kraken2
@@ -8,12 +11,11 @@ rule kraken2_classification:
         TSV = ROOT / 'kraken2' / '{class_type}' / 'classification.tsv',
         TSV_report = ROOT / 'kraken2' / '{class_type}' / 'report.tsv'
     params:
-        db = config['db']['kraken2']
+        db = KRAKEN2_DB
     threads: 32
     shell:
         """
-        ml load kraken2_local/2.1.1;
-        kraken2 {input} --db {params.db} --output {output.TSV} --report {output.TSV_report} --threads {threads}
+        {KRAKEN2} {input} --db {params.db} --output {output.TSV} --report {output.TSV_report} --threads {threads}
         """
 
 rule kraken2_clean:
@@ -45,7 +47,7 @@ rule kraken2_taxonomy:
     output:
         TSV = ROOT / 'kraken2' / '{class_type}' / 'classification_cleaned_tax.tsv'
     params:
-        db=config['db']['taxonomy']
+        db = TAXONOMY_DB
     shell:
         """
         ml load taxonkit;
@@ -59,7 +61,6 @@ rule kraken2_taxonomy:
 
 rule kraken2_output:
     input:
-        canu_output = lambda wildcards: FILENAME[wildcards.class_type],
         TSV_kraken2 = rules.kraken2_taxonomy.output.TSV,
         read_count = ROOT / 'input' / 'HQ.stats'
     output:
@@ -86,4 +87,12 @@ rule kraken2_output:
             organism_count=organism_count.groupby(organism_count.index,sort=False).sum()
 
         organism_count.to_csv(output.TSV_kraken2,sep='\t',index=True,header=False)
+
+
+if 'bracken' in USE_CLASSIFIERS:
+    include: "bracken.smk"
+
+
+
+
 

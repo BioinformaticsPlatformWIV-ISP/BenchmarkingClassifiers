@@ -1,3 +1,8 @@
+BRACKEN = CLASSIFIERS_LOCATIONS['bracken']['path']
+BRACKEN_DB = CLASSIFIERS_LOCATIONS['bracken']['db_path']
+KRAKEN2 = CLASSIFIERS_LOCATIONS['kraken2']['path']
+
+
 PYTHON_SCRIPTS = config['python_scripts']
 
 rule convert_kraken2_classification:
@@ -17,9 +22,7 @@ rule convert_kraken2_classification:
         report=ROOT / 'bracken' / '{class_type}' / 'kraken2_report_updated.tsv',
         taxonomy_db = ROOT / 'bracken' / '{class_type}' / 'mydb_taxonomy.tsv',
     params:
-        DB_bracken = config['db'],
-        TAXONOMY=config['db']['taxonomy'],
-        DB_kraken2= config['db']['kraken2'],
+        TAXONOMY=TAXONOMY_DB,
         SCRIPTS=PYTHON_SCRIPTS,
     shell:
         """
@@ -42,14 +45,13 @@ rule bracken_classification:
         report = ROOT / 'bracken' / '{class_type}' / '{class_level}' / 'classification.report',
         stdout = ROOT / 'bracken' / '{class_type}' / '{class_level}' / 'bracken.output'
     params:
-        db = config['db']['bracken'],
-        read_len = 1000,
-        level = lambda wildcards: {'genus': 'G', 'species': 'S'}[wildcards.class_level]
+        db=BRACKEN_DB,
+        read_len=1000,
+        level=lambda wildcards: {'genus': 'G', 'species': 'S'}[wildcards.class_level]
     shell:
         """
-        ml kraken2_local/2.1.1;
-        ml bracken/2.8;
-        bracken \
+        export PATH=""$(dirname "{KRAKEN2}")":$PATH"
+        {BRACKEN} \
         -d {params.db} \
         -i {input} \
         -o {output.TSV} \
@@ -68,8 +70,8 @@ rule bracken_taxonomy:
     output:
         TSV = ROOT / 'bracken' / '{class_type}' / '{class_level}' / 'classification_tax.tsv'
     params:
-        db=config['db']['taxonomy'],
-        level=lambda wildcards: 'g' if wildcards.class_level=="genus" else 's'
+        db=TAXONOMY_DB,
+        level=lambda wildcards: 'g' if wildcards.class_level == "genus" else 's'
     shell:
         """
         ml load taxonkit/0.15.0;
@@ -84,7 +86,7 @@ rule bracken_taxonomy:
               >> {output.TSV};
         """
 
-rule bracken_output :
+rule bracken_output:
     input:
         TSV_bracken = rules.bracken_taxonomy.output.TSV,
         stdout = rules.bracken_classification.output.stdout,
@@ -119,19 +121,15 @@ rule bracken_output :
         # should be compensated for with a new category
         # https://github.com/jenniferlu717/Bracken/issues/77
         reads_distributed_practice = pd.read_table(input.TSV_bracken,
-                                                    usecols=['added_reads']).squeeze('columns').sum()
+            usecols=['added_reads']).squeeze('columns').sum()
         braken2_input['rounding_error'] = reads_distributed_theoretical - reads_distributed_practice
 
         braken2_input['not_distributed'] = reads_not_distributed
         braken2_input['no_hit'] = read_count - braken2_input.sum()
 
         if any(braken2_input.index.duplicated(keep=False)):
-            braken2_input[braken2_input.index.duplicated()].to_csv(params.duplicate_names, sep='\t',index=True,header=False)
-            braken2_input=braken2_input.groupby(braken2_input.index,sort=False).sum()
+            braken2_input[braken2_input.index.duplicated()].to_csv(params.duplicate_names,sep='\t',index=True,header=False)
+            braken2_input = braken2_input.groupby(braken2_input.index,sort=False).sum()
 
         braken2_input.to_csv(output.TSV_bracken,sep='\t',index=True,header=False)
-
-
-
-
 

@@ -1,3 +1,7 @@
+CENTRIFUGE = CLASSIFIERS_LOCATIONS['centrifuge']['path']
+CENTRIFUGE_DB = CLASSIFIERS_LOCATIONS['centrifuge']['db_path']
+
+
 rule centrifuge_classification:
     """
     Classifies reads/assemblies using centrifuge
@@ -9,11 +13,10 @@ rule centrifuge_classification:
         TSV_summary = ROOT / 'centrifuge' / '{class_type}' / 'classification_summary.tsv'
     threads: 64
     params:
-        db=config['db']['centrifuge'],
+        db = CENTRIFUGE_DB,
     shell:
         """
-        ml load centrifuge/1.0.4;
-        centrifuge \
+        {CENTRIFUGE} \
         -p {threads} \
         -k 1 \
         -q \
@@ -53,10 +56,10 @@ rule centrifuge_taxonomy:
     output:
         TSV = ROOT / 'centrifuge' / '{class_type}' / 'classification_cleaned_tax.tsv'
     params:
-        db = config['db']['taxonomy']
+        db = TAXONOMY_DB
     shell:
         """
-        ml load taxonkit/0.15.0;
+        ml taxonkit/0.15.0;
         FILE=$(sed '1d' {input})
         paste <(cut -f 1,3 <<<"$FILE") <(cut -f 3 <<<"$FILE" \
         | taxonkit lineage --data-dir {params.db} \
@@ -72,7 +75,6 @@ rule centrifuge_filter:
     Split file to either taxid with genus name and taxid with species name.
     """
     input:
-        canu_output = lambda wildcards: FILENAME[wildcards.class_type],
         TSV_centrifuge = rules.centrifuge_taxonomy.output.TSV,
         read_count= ROOT / 'input' / 'HQ.stats'
 

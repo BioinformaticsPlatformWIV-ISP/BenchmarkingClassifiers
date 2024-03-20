@@ -1,3 +1,7 @@
+KAIJU = CLASSIFIERS_LOCATIONS['kaiju']['path']
+KAIJU_DB = CLASSIFIERS_LOCATIONS['kaiju']['db_path']
+
+
 rule kaiju_classification:
     """
     Classifies reads/assemblies using Kaiju
@@ -7,12 +11,12 @@ rule kaiju_classification:
     output:
         TSV = ROOT / 'kaiju' / '{class_type}' / 'classification.tsv'
     params:
-        db = config['db']['kaiju'],
-        kaiju_tax = Path(config['db']['taxonomy']) / 'nodes.dmp'
+        db = KAIJU_DB,
+        kaiju_tax = Path(TAXONOMY_DB) / 'nodes.dmp'
     threads: 16
     shell:
         """
-        /scratch/alvanuffelen/software/kaiju/bin/kaiju \
+        {KAIJU} \
         -t {params.kaiju_tax} \
         -f {params.db} \
         -i {input} \
@@ -63,7 +67,7 @@ rule kaiju_taxonomy:
     output:
         TSV_classified_tax = ROOT / 'kaiju' / '{class_type}' / 'classified_tax.tsv'
     params:
-        TAXONOMY=config['db']['taxonomy']
+        TAXONOMY = TAXONOMY_DB
     shell:
         """
         ml taxonkit/0.15.0;

@@ -1,3 +1,9 @@
+MOTUS_ENV= CLASSIFIERS_LOCATIONS['motus']['path_env']
+MOTUS_DB = CLASSIFIERS_LOCATIONS['motus']['db_path']
+BWA = CLASSIFIERS_LOCATIONS['bwa']['path']
+SAMTOOLS = CLASSIFIERS_LOCATIONS['samtools']['path']
+
+
 rule motus_split_long_reads:
     """
     Splits the long reads into shorted reads
@@ -7,11 +13,10 @@ rule motus_split_long_reads:
     output:
         converted_long_reads = ROOT / 'motus' / '{class_type}' / 'converted_long_reads.fasta.gz'
     params:
-        db = config['db']['motus'],
+        db = MOTUS_DB,
     shell:
         """
-        . {ENV}/bin/activate
-        motus prep_long -i {input} -o {output.converted_long_reads} -db {params.db}
+        {MOTUS} prep_long -i {input} -o {output.converted_long_reads} -db {params.db}
         """
 
 rule motus_classification:
@@ -25,13 +30,13 @@ rule motus_classification:
     log:
         classification_log = ROOT / 'motus' / '{class_type}' / 'log.txt'
     params:
-        db = config['db']['motus'],
+        db = MOTUS_DB,
     threads: 32
     shell:
         """
-        ml bwa/0.7.17
-        ml samtools/1.17
-        . {ENV}/bin/activate
+        export PATH=""$(dirname "{BWA}")":$PATH"
+        export PATH=""$(dirname "{BOWTIE2}")":$PATH"
+		. {MOTUS_ENV}/bin/activate
         motus profile -s {input.converted_long_reads} \
                       -t {threads} \
                       -p  \
@@ -95,7 +100,7 @@ rule motus_taxonomy:
     output:
         cleaned_count_tax = ROOT / 'motus' / '{class_type}' / 'cleaned_count_tax.tsv'
     params:
-        db=config['db']['taxonomy']
+        db = TAXONOMY_DB
     shell:
         """
         ml taxonkit;
