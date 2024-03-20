@@ -5,12 +5,12 @@ rule kma_mapping:
     input:
         lambda wildcards: FILENAME[wildcards.class_type]
     output:
-        frag = ROOT / 'kma' / '{class_type}' / 'kma.frag.gz',
-        mapstat = ROOT / 'kma' / '{class_type}' / 'kma.mapstat',
-        res = ROOT / 'kma' / '{class_type}' / 'kma.res'
+        frag = ROOT / 'kma' / 'kma.frag.gz',
+        mapstat = ROOT / 'kma' / 'kma.mapstat',
+        res = ROOT / 'kma' / 'kma.res'
     params:
-        prefix = lambda wildcards: ROOT / 'kma' / wildcards.class_type / 'kma',
         DB = KMA_DB,
+        prefix = lambda wildcards: ROOT / 'kma' / 'kma',
         MP = 20,
         MRS = 0.0,
         BC = 0.7,
@@ -40,7 +40,7 @@ rule unpack_frag_gz:
     input:
         rules.kma_mapping.output.frag
     output:
-        frag = ROOT / 'kma' / '{class_type}' / 'kma.frag'
+        frag = ROOT / 'kma' / 'kma.frag'
     shell:
         """
         gzip -dk {input}
@@ -57,7 +57,7 @@ rule kma_clean:
     input:
         rules.unpack_frag_gz.output.frag
     output:
-        TSV = ROOT / 'kma' / '{class_type}'/'kma_cleaned.tsv'
+        TSV = ROOT / 'kma' / 'kma_cleaned.tsv'
     run:
         import pandas as pd
 
@@ -84,7 +84,7 @@ rule kma_taxonomy:
     input:
         TSV = rules.kma_clean.output.TSV
     output:
-        TSV = ROOT / 'kma' / '{class_type}' /'kma_cleaned_tax.tsv'
+        TSV = ROOT / 'kma' / 'kma_cleaned_tax.tsv'
     params:
         db = TAXONOMY_DB
     threads: 16
@@ -105,10 +105,10 @@ rule kma_output:
         read_count= ROOT / 'input' / 'HQ.stats'
 
     output:
-        TSV_KMA = ROOT / 'output' / '{class_type}' / '{class_level}' / 'output_kma.tsv'
+        TSV_KMA = ROOT / 'output' / '{class_level}' / 'output_kma.tsv'
     params:
         level=lambda wildcards: wildcards.class_level,
-        duplicate_names= lambda wildcards: ROOT / 'output' / wildcards.class_type / wildcards.class_level / 'corrected_duplicates_kma.log'
+        duplicate_names= lambda wildcards: ROOT / 'output' / wildcards.class_level / 'corrected_duplicates_kma.log'
     run:
         import pandas as pd
 

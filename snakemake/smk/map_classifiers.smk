@@ -11,7 +11,6 @@ PYTHON_SCRIPTS = config['python_scripts']
 CLASSIFIERS_LOCATIONS = config['locations']
 TAXONOMY_DB = CLASSIFIERS_LOCATIONS['taxonomy']['db_path']
 
-CLASS_TYPE = ['reads']
 CLASS_LEVEL = ['genus', 'species']
 # reverse bool
 filter_reads = not config['no_filter']
@@ -29,10 +28,9 @@ for classifier in USE_CLASSIFIERS:
 
 rule all:
     input:
-        # expand(ROOT / 'output' / '{class_type}' / '{class_level}' / 'output_{classifier}.tsv', class_type=CLASS_TYPE, class_level=CLASS_LEVEL, classifier=use_classifiers),
-        # expand(ROOT / 'output' / '{class_type}' / '{class_level}' / 'output_kaiju.tsv', class_type=CLASS_TYPE, class_level=CLASS_LEVEL),
+        expand(ROOT / 'output' / '{class_level}' / 'output_{classifier}.tsv', class_level=CLASS_LEVEL, classifier=USE_CLASSIFIERS),
         # ROOT/ 'logs' / 'merge_check_output_tax.log',
-        expand(Path(truth_file).parent / '{ground_truth_type}_updated.yml', ground_truth_type=['ground_truth', 'ground_truth_tax'])
+        expand(ROOT / '{ground_truth_type}_updated.yml', ground_truth_type=['ground_truth', 'ground_truth_tax'])
 
 rule filter_quality_length:
     """
@@ -93,7 +91,7 @@ rule convert_seq_to_tax_abundace:
     input:
         truth_file
     output:
-        Path(truth_file).parent / 'ground_truth_tax.yml'
+        ROOT / 'ground_truth_tax.yml'
     log:
         ROOT / "logs" / "ground_truth_tax.log"
     script:
@@ -110,7 +108,7 @@ rule update_ground_truth:
     input:
         lambda wc: {'ground_truth': truth_file, 'ground_truth_tax': rules.convert_seq_to_tax_abundace.output}[wc.ground_truth_type]
     output:
-        Path(truth_file).parent / '{ground_truth_type}_updated.yml'
+        ROOT / '{ground_truth_type}_updated.yml'
     params:
         TAXONOMY = TAXONOMY_DB
     log:
@@ -137,9 +135,9 @@ rule check_output_tax:
    It renames the taxonomy of the given output file and creates an updated version, if necessary
    """
     input:
-        ROOT / 'output' / '{class_type}' / '{class_level}' / 'output_{classifier}.tsv'
+        ROOT / 'output' / '{class_level}' / 'output_{classifier}.tsv'
     output:
-        temp(ROOT / "logs" / "update_output_{class_type}_{classifier}_{class_level}.log")
+        temp(ROOT / "logs" / "update_output_{classifier}_{class_level}.log")
     params:
         TAXONOMY = TAXONOMY_DB
     shell:
@@ -168,7 +166,7 @@ rule check_output_tax:
 
 rule merge_check_output_tax:
     input:
-        expand(rules.check_output_tax.output, class_type=CLASS_TYPE, class_level=CLASS_LEVEL, classifier=use_classifiers)
+        expand(rules.check_output_tax.output, class_level=CLASS_LEVEL, classifier=USE_CLASSIFIERS)
     output:
         ROOT / 'logs' / 'merge_check_output_tax.log'
     shell:

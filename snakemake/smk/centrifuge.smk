@@ -9,8 +9,8 @@ rule centrifuge_classification:
     input:
         lambda wildcards: FILENAME[wildcards.class_type]
     output:
-        TSV = ROOT / 'centrifuge' / '{class_type}' / 'classification.tsv',
-        TSV_summary = ROOT / 'centrifuge' / '{class_type}' / 'classification_summary.tsv'
+        TSV = ROOT / 'centrifuge' / 'classification.tsv',
+        TSV_summary = ROOT / 'centrifuge' / 'classification_summary.tsv'
     threads: 64
     params:
         db = CENTRIFUGE_DB,
@@ -34,7 +34,7 @@ rule centrifuge_clean:
     input:
         rules.centrifuge_classification.output.TSV
     output:
-        TSV = ROOT / 'centrifuge' / '{class_type}' / 'classification_cleaned.tsv'
+        TSV = ROOT / 'centrifuge' / 'classification_cleaned.tsv'
     run:
         import pandas as pd
 
@@ -54,7 +54,7 @@ rule centrifuge_taxonomy:
     input:
         rules.centrifuge_clean.output.TSV
     output:
-        TSV = ROOT / 'centrifuge' / '{class_type}' / 'classification_cleaned_tax.tsv'
+        TSV = ROOT / 'centrifuge' / 'classification_cleaned_tax.tsv'
     params:
         db = TAXONOMY_DB
     shell:
@@ -79,10 +79,10 @@ rule centrifuge_filter:
         read_count= ROOT / 'input' / 'HQ.stats'
 
     output:
-        TSV = ROOT / 'output' / '{class_type}' / '{class_level}' / 'output_centrifuge.tsv'
+        TSV = ROOT / 'output' / '{class_level}' / 'output_centrifuge.tsv'
     params:
         level = lambda wildcards: wildcards.class_level,
-        duplicate_names=lambda wildcards: ROOT / 'output' / wildcards.class_type / wildcards.class_level / 'corrected_duplicates_centrifuge.log'
+        duplicate_names=lambda wildcards: ROOT / 'output' / wildcards.class_level / 'corrected_duplicates_centrifuge.log'
     run:
         import pandas as pd
 

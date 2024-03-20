@@ -10,8 +10,8 @@ rule metaphlan_classification:
     input:
         lambda wildcards: FILENAME[wildcards.class_type]
     output:
-        TSV = ROOT / 'metaphlan' / '{class_type}' / 'classification.tsv',
-        bowtie_out = ROOT / 'metaphlan' / '{class_type}' / 'classification.bow.txt'
+        TSV = ROOT / 'metaphlan' / 'classification.tsv',
+        bowtie_out = ROOT / 'metaphlan' / 'classification.bow.txt'
     params:
         db = METAPHLAN_DB,
         env = str(Path(METAPHLAN_ENV) / 'bin' / 'activate'),
@@ -42,7 +42,7 @@ rule metaphlan_clean:
     input:
         rules.metaphlan_classification.output.TSV
     output:
-        TSV = ROOT / 'metaphlan' / '{class_type}' / 'classification_cleaned.tsv'
+        TSV = ROOT / 'metaphlan' / 'classification_cleaned.tsv'
     threads: 8
     run:
         import pandas as pd
@@ -70,7 +70,7 @@ rule metaphlan_taxonomy:
     input:
         cleaned_abundance = rules.metaphlan_clean.output.TSV
     output:
-        cleaned_abundance_tax = ROOT / 'metaphlan' / '{class_type}' / 'classification_cleaned_tax.tsv'
+        cleaned_abundance_tax = ROOT / 'metaphlan' / 'classification_cleaned_tax.tsv'
     params:
         db=TAXONOMY_DB
     shell:
@@ -92,10 +92,10 @@ rule metaphlan_output:
         classification = rules.metaphlan_classification.output.TSV
 
     output:
-        TSV_metaphlan = ROOT / 'output' / '{class_type}' / '{class_level}' / 'output_metaphlan.tsv'
+        TSV_metaphlan = ROOT / 'output' / '{class_level}' / 'output_metaphlan.tsv'
     params:
         level = lambda wildcards: wildcards.class_level,
-        duplicate_names= lambda wildcards: ROOT / 'output' / wildcards.class_type / wildcards.class_level / 'corrected_duplicates_metaphlan.log'
+        duplicate_names= lambda wildcards: ROOT / 'output' / wildcards.class_level / 'corrected_duplicates_metaphlan.log'
     run:
         import pandas as pd
 

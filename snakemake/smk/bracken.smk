@@ -18,9 +18,9 @@ rule convert_kraken2_classification:
     input:
         TSV=rules.kraken2_classification.output.TSV,
     output:
-        TSV=ROOT / 'bracken' / '{class_type}' / 'kraken2_classification_updated.tsv',
-        report=ROOT / 'bracken' / '{class_type}' / 'kraken2_report_updated.tsv',
-        taxonomy_db = ROOT / 'bracken' / '{class_type}' / 'mydb_taxonomy.tsv',
+        TSV=ROOT / 'bracken' / 'kraken2_classification_updated.tsv',
+        report=ROOT / 'bracken' / 'kraken2_report_updated.tsv',
+        taxonomy_db=ROOT / 'bracken' / 'mydb_taxonomy.tsv',
     params:
         TAXONOMY=TAXONOMY_DB,
         SCRIPTS=PYTHON_SCRIPTS,
@@ -41,9 +41,9 @@ rule bracken_classification:
     input:
         rules.convert_kraken2_classification.output.report
     output:
-        TSV = ROOT / 'bracken' / '{class_type}' / '{class_level}' / 'classification.tsv',
-        report = ROOT / 'bracken' / '{class_type}' / '{class_level}' / 'classification.report',
-        stdout = ROOT / 'bracken' / '{class_type}' / '{class_level}' / 'bracken.output'
+        TSV=ROOT / 'bracken' / '{class_level}' / 'classification.tsv',
+        report=ROOT / 'bracken' / '{class_level}' / 'classification.report',
+        stdout=ROOT / 'bracken' / '{class_level}' / 'bracken.output'
     params:
         db=BRACKEN_DB,
         read_len=1000,
@@ -68,7 +68,7 @@ rule bracken_taxonomy:
     input:
         rules.bracken_classification.output.TSV
     output:
-        TSV = ROOT / 'bracken' / '{class_type}' / '{class_level}' / 'classification_tax.tsv'
+        TSV=ROOT / 'bracken' / '{class_level}' / 'classification_tax.tsv'
     params:
         db=TAXONOMY_DB,
         level=lambda wildcards: 'g' if wildcards.class_level == "genus" else 's'
@@ -90,11 +90,11 @@ rule bracken_output:
     input:
         TSV_bracken = rules.bracken_taxonomy.output.TSV,
         stdout = rules.bracken_classification.output.stdout,
-        read_count= ROOT / 'input' / 'HQ.stats'
+        read_count = ROOT / 'input' / 'HQ.stats'
     params:
-        duplicate_names=lambda wildcards: ROOT / 'output' / wildcards.class_type / wildcards.class_level / 'corrected_duplicates_bracken.log'
+        duplicate_names=lambda wildcards: ROOT / 'output' / wildcards.class_level / 'corrected_duplicates_bracken.log'
     output:
-        TSV_bracken = ROOT / 'output' / '{class_type}' / '{class_level}' / 'output_bracken.tsv'
+        TSV_bracken=ROOT / 'output' / '{class_level}' / 'output_bracken.tsv'
     run:
         import pandas as pd
         import re

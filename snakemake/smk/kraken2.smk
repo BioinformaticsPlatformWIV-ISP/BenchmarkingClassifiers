@@ -8,8 +8,8 @@ rule kraken2_classification:
     input:
         lambda wildcards: FILENAME[wildcards.class_type]
     output:
-        TSV = ROOT / 'kraken2' / '{class_type}' / 'classification.tsv',
-        TSV_report = ROOT / 'kraken2' / '{class_type}' / 'report.tsv'
+        TSV = ROOT / 'kraken2' / 'classification.tsv',
+        TSV_report = ROOT / 'kraken2' / 'report.tsv'
     params:
         db = KRAKEN2_DB
     threads: 32
@@ -25,7 +25,7 @@ rule kraken2_clean:
     input:
         TSV = rules.kraken2_classification.output.TSV
     output:
-        TSV = ROOT / 'kraken2' / '{class_type}' / 'classification_cleaned.tsv'
+        TSV = ROOT / 'kraken2' / 'classification_cleaned.tsv'
     run:
         import pandas as pd
         kraken2_ouput = pd.read_table(input.TSV,
@@ -45,7 +45,7 @@ rule kraken2_taxonomy:
     input:
         rules.kraken2_clean.output.TSV
     output:
-        TSV = ROOT / 'kraken2' / '{class_type}' / 'classification_cleaned_tax.tsv'
+        TSV = ROOT / 'kraken2' / 'classification_cleaned_tax.tsv'
     params:
         db = TAXONOMY_DB
     shell:
@@ -64,10 +64,10 @@ rule kraken2_output:
         TSV_kraken2 = rules.kraken2_taxonomy.output.TSV,
         read_count = ROOT / 'input' / 'HQ.stats'
     output:
-        TSV_kraken2 = ROOT / 'output' / '{class_type}' / '{class_level}' / 'output_kraken2.tsv'
+        TSV_kraken2 = ROOT / 'output' / '{class_level}' / 'output_kraken2.tsv'
     params:
         level = lambda wildcards: wildcards.class_level,
-        duplicate_names= lambda wildcards: ROOT / 'output' / wildcards.class_type / wildcards.class_level / 'corrected_duplicates_kraken2.log'
+        duplicate_names= lambda wildcards: ROOT / 'output' / wildcards.class_level / 'corrected_duplicates_kraken2.log'
     run:
         import pandas as pd
 

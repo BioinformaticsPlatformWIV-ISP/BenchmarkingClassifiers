@@ -5,9 +5,9 @@ rule ccmetagan_filtering:
     input:
         res = rules.kma_mapping.output.res
     output:
-        results = ROOT / 'ccmetagen' / '{class_type}' / 'results.ccm.csv',
+        results = ROOT / 'ccmetagen' / 'results.ccm.csv',
     params:
-        output_prefix = lambda wildcards: ROOT / 'ccmetagen' / wildcards.class_type / 'results'
+        output_prefix = lambda wildcards: ROOT / 'ccmetagen' / 'results'
     shell:
         """
         . {CCMETAGEN_ENV}/bin/activate
@@ -28,7 +28,7 @@ rule ccmetagen_clean:
         results = rules.ccmetagan_filtering.output.results,
         mapstat = rules.kma_mapping.output.mapstat
     output:
-        results_cleaned = ROOT / 'ccmetagen' / '{class_type}' / 'results_cleaned.tsv',
+        results_cleaned = ROOT / 'ccmetagen' / 'results_cleaned.tsv',
     run:
         import pandas as pd
         results = pd.read_table(input.results, sep=',', usecols=[0, 11])
@@ -42,7 +42,7 @@ rule ccmetagen_taxonomy:
     input:
         results_cleaned = rules.ccmetagen_clean.output.results_cleaned
     output:
-        results_cleaned_tax = ROOT / 'ccmetagen' / '{class_type}' / 'results_cleaned_tax.tsv',
+        results_cleaned_tax = ROOT / 'ccmetagen' / 'results_cleaned_tax.tsv',
     params:
         db = TAXONOMY_DB
     shell:
@@ -62,10 +62,10 @@ rule ccmetagen_output:
         TSV_ccmetagen = rules.ccmetagen_taxonomy.output.results_cleaned_tax,
         read_count = ROOT / 'input' / 'HQ.stats'
     output:
-        TSV_ccmetagen = ROOT / 'output' / '{class_type}' / '{class_level}' / 'output_ccmetagen.tsv'
+        TSV_ccmetagen = ROOT / 'output' / '{class_level}' / 'output_ccmetagen.tsv'
     params:
         level = lambda wildcards: wildcards.class_level,
-        duplicate_names=lambda wildcards: ROOT / 'output' / wildcards.class_type / wildcards.class_level / 'corrected_duplicates_ccmetagen.log'
+        duplicate_names=lambda wildcards: ROOT / 'output' / wildcards.class_level / 'corrected_duplicates_ccmetagen.log'
     run:
         import pandas as pd
 

@@ -11,7 +11,7 @@ rule motus_split_long_reads:
     input:
         lambda wildcards: FILENAME[wildcards.class_type]
     output:
-        converted_long_reads = ROOT / 'motus' / '{class_type}' / 'converted_long_reads.fasta.gz'
+        converted_long_reads = ROOT / 'motus' / 'converted_long_reads.fasta.gz'
     params:
         db = MOTUS_DB,
     shell:
@@ -26,9 +26,9 @@ rule motus_classification:
     input:
         converted_long_reads = rules.motus_split_long_reads.output.converted_long_reads
     output:
-        tax_profile = ROOT / 'motus' / '{class_type}' / 'taxonomic_profile.txt'
+        tax_profile = ROOT / 'motus' / 'taxonomic_profile.txt'
     log:
-        classification_log = ROOT / 'motus' / '{class_type}' / 'log.txt'
+        classification_log = ROOT / 'motus' / 'log.txt'
     params:
         db = MOTUS_DB,
     threads: 32
@@ -56,8 +56,8 @@ rule motus_clean:
     input:
         tax_profile = rules.motus_classification.output.tax_profile
     output:
-        cleaned_count = ROOT / 'motus' / '{class_type}' / 'cleaned_count.tsv',
-        cleaned_tax_profile = ROOT / 'motus' / '{class_type}' / 'cleaned_taxonomic_profile.txt'
+        cleaned_count = ROOT / 'motus' / 'cleaned_count.tsv',
+        cleaned_tax_profile = ROOT / 'motus' / 'cleaned_taxonomic_profile.txt'
 
     run:
         import pandas as pd
@@ -98,7 +98,7 @@ rule motus_taxonomy:
     input:
         cleaned_count = rules.motus_clean.output.cleaned_count
     output:
-        cleaned_count_tax = ROOT / 'motus' / '{class_type}' / 'cleaned_count_tax.tsv'
+        cleaned_count_tax = ROOT / 'motus' / 'cleaned_count_tax.tsv'
     params:
         db = TAXONOMY_DB
     shell:
@@ -119,10 +119,10 @@ rule motus_output:
         cleaned_count_tax = rules.motus_taxonomy.output.cleaned_count_tax,
         tax_profile = rules.motus_classification.output.tax_profile
     output:
-        TSV_motus = ROOT / 'output' / '{class_type}' / '{class_level}' / 'output_motus.tsv'
+        TSV_motus = ROOT / 'output' / '{class_level}' / 'output_motus.tsv'
     params:
         level = lambda wildcards: wildcards.class_level,
-        duplicate_names= lambda wildcards: ROOT / 'output' / wildcards.class_type / wildcards.class_level / 'corrected_duplicates_motus.log'
+        duplicate_names= lambda wildcards: ROOT / 'output' / wildcards.class_level / 'corrected_duplicates_motus.log'
     run:
         import pandas as pd
 

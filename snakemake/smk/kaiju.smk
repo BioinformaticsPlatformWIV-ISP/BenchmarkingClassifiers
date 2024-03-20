@@ -9,7 +9,7 @@ rule kaiju_classification:
     input:
         lambda wildcards: FILENAME[wildcards.class_type]
     output:
-        TSV = ROOT / 'kaiju' / '{class_type}' / 'classification.tsv'
+        TSV = ROOT / 'kaiju' / 'classification.tsv'
     params:
         db = KAIJU_DB,
         kaiju_tax = Path(TAXONOMY_DB) / 'nodes.dmp'
@@ -32,8 +32,8 @@ rule kaiju_clean:
     input:
         TSV = rules.kaiju_classification.output.TSV
     output:
-        TSV_classified = ROOT / 'kaiju' / '{class_type}' / 'classified.tsv',
-        TSV_unclassified= ROOT / 'kaiju' / '{class_type}' / 'unclassified.tsv',
+        TSV_classified = ROOT / 'kaiju' / 'classified.tsv',
+        TSV_unclassified= ROOT / 'kaiju' / 'unclassified.tsv',
 
     run:
         import pandas as pd
@@ -65,7 +65,7 @@ rule kaiju_taxonomy:
     input:
         TSV_classified = rules.kaiju_clean.output.TSV_classified
     output:
-        TSV_classified_tax = ROOT / 'kaiju' / '{class_type}' / 'classified_tax.tsv'
+        TSV_classified_tax = ROOT / 'kaiju' / 'classified_tax.tsv'
     params:
         TAXONOMY = TAXONOMY_DB
     shell:
@@ -84,10 +84,10 @@ rule kaiju_output:
         TSV_unclassified = rules.kaiju_clean.output.TSV_unclassified,
         kaiju_taxonomy = rules.kaiju_taxonomy.output.TSV_classified_tax
     output:
-        TSV_kaiju = ROOT / 'output' / '{class_type}' / '{class_level}' / 'output_kaiju.tsv'
+        TSV_kaiju = ROOT / 'output' / '{class_level}' / 'output_kaiju.tsv'
     params:
         level = lambda wildcards: wildcards.class_level,
-        duplicate_names= lambda wildcards: ROOT / 'output' / wildcards.class_type / wildcards.class_level / 'corrected_duplicates_kaiju.log'
+        duplicate_names= lambda wildcards: ROOT / 'output' / wildcards.class_level / 'corrected_duplicates_kaiju.log'
     run:
         import pandas as pd
 
