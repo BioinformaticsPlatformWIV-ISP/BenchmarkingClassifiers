@@ -67,25 +67,7 @@ rule stats_filtered_reads:
         """
 
 
-rule canu_assembly:
-    """
-    Assembles reads with Canu
-    """
-    input:
-        rules.filter_quality_length.output if filter_reads else config['input']['fastq']
-    output:
-        ROOT / 'canu' / 'hackaton.contigs.fasta'
-    params:
-        dir_out = directory(ROOT / 'canu'),
-        prefix = 'hackaton'
-    threads: 24
-    shell:
-        """
-        ml load canu/2.2;
-        canu -p {params.prefix} -d {params.dir_out} genomeSize=1m stopOnLowCoverage=0.000001 -nanopore-raw {input} -maxThreads={threads}
-        """
-
-FILENAME= dict(assembly = rules.canu_assembly.output, reads = rules.canu_assembly.input)
+INPUT_READS = rules.filter_quality_length.output  if filter_reads else config['input']['fastq']
 
 rule convert_seq_to_tax_abundace:
     input:

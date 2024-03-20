@@ -7,7 +7,7 @@ rule mmseqs2_classification:
     Classifies reads/assemblies using mmseqs2
     """
     input:
-        lambda wildcards: FILENAME[wildcards.class_type]
+        lambda wildcards: INPUT_READS
     output:
         TSV = ROOT / 'mmseqs2' / 'classification_lca.tsv',
     threads: 64

@@ -6,7 +6,7 @@ rule kraken2_classification:
     Classifies reads/assemblies using Kraken2
     """
     input:
-        lambda wildcards: FILENAME[wildcards.class_type]
+        lambda wildcards: INPUT_READS
     output:
         TSV = ROOT / 'kraken2' / 'classification.tsv',
         TSV_report = ROOT / 'kraken2' / 'report.tsv'

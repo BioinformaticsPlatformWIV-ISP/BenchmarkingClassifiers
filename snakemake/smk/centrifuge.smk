@@ -7,7 +7,7 @@ rule centrifuge_classification:
     Classifies reads/assemblies using centrifuge
     """
     input:
-        lambda wildcards: FILENAME[wildcards.class_type]
+        lambda wildcards: INPUT_READS
     output:
         TSV = ROOT / 'centrifuge' / 'classification.tsv',
         TSV_summary = ROOT / 'centrifuge' / 'classification_summary.tsv'

@@ -3,7 +3,7 @@ KMA_DB = CLASSIFIERS_LOCATIONS['kma']['db_path']
 
 rule kma_mapping:
     input:
-        lambda wildcards: FILENAME[wildcards.class_type]
+        lambda wildcards: INPUT_READS
     output:
         frag = ROOT / 'kma' / 'kma.frag.gz',
         mapstat = ROOT / 'kma' / 'kma.mapstat',

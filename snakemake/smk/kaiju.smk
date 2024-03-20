@@ -7,7 +7,7 @@ rule kaiju_classification:
     Classifies reads/assemblies using Kaiju
     """
     input:
-        lambda wildcards: FILENAME[wildcards.class_type]
+        lambda wildcards: INPUT_READS
     output:
         TSV = ROOT / 'kaiju' / 'classification.tsv'
     params:

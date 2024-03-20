@@ -8,7 +8,7 @@ rule metaphlan_classification:
     Classifies reads/assemblies using metahplan
     """
     input:
-        lambda wildcards: FILENAME[wildcards.class_type]
+        lambda wildcards: INPUT_READS
     output:
         TSV = ROOT / 'metaphlan' / 'classification.tsv',
         bowtie_out = ROOT / 'metaphlan' / 'classification.bow.txt'

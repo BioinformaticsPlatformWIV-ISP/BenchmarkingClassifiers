@@ -9,7 +9,7 @@ rule motus_split_long_reads:
     Splits the long reads into shorted reads
     """
     input:
-        lambda wildcards: FILENAME[wildcards.class_type]
+        lambda wildcards: INPUT_READS
     output:
         converted_long_reads = ROOT / 'motus' / 'converted_long_reads.fasta.gz'
     params:
