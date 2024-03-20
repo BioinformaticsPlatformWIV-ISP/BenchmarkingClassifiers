@@ -1,12 +1,13 @@
 import argparse
 import logging
+import sys
+
 import yaml
+import snakemake
 from pathlib import Path
 from rich.logging import RichHandler
 from typing import Dict, Any, Optional, Sequence
 from datetime import datetime
-
-from utils.command import Command
 
 
 def run_snakemake(dir_working: Path, snakefile: Path, dry_run: bool, config_data: Dict[str, Any]) -> None:
@@ -28,30 +29,15 @@ def run_snakemake(dir_working: Path, snakefile: Path, dry_run: bool, config_data
         yaml.dump(config_data, handle)
     logger.info(f"Snakemake config created: {config_path}")
 
-    # Create string with SnakeMake params
-    snakemake_params = [
-        f'snakemake',
-        f"--snakefile {snakefile}",
-        f'--configfile {config_path}',
-        f'--cores',
-        f'-p',
-        f'--stats {dir_working / ("stats_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S") + ".json")}',
-        f'-r',
-        f'-n'
-    ]
-    # Execute  snakemake
-    if dry_run:
-        command_ = Command(' '.join(snakemake_params))
-    else:
-        command_ = Command(' '.join(snakemake_params[:-1]))
-
-    command_.run_command(dir_working)
-
-    # Check command output
-    if command_.exit_code != 0:
-        raise RuntimeError(f"Error executing snakemake workflow:\n{command_.stderr}")
-    with (dir_working / 'stderr.log').open('w') as handle:
-        handle.write(command_.stderr)
+    snakemake.snakemake(snakefile=snakefile,
+                        configfiles=[config_path],
+                        workdir=dir_working,
+                        stats=dir_working / ("stats_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S") + ".json"),
+                        printreason=True,
+                        printshellcmds=True,
+                        cores=32,
+                        dryrun=dry_run
+                        )
 
 
 class Classifying(object):
@@ -61,7 +47,7 @@ class Classifying(object):
 
     def __init__(self, args: Optional[Sequence[str]] = None) -> None:
         """
-        Initializes the an classifying context instance.
+        Initializes the classifying context instance.
         """
         self._args = Classifying._parse_arguments(args)
 
@@ -72,58 +58,65 @@ class Classifying(object):
         :param args: Arguments
         :return: Parsed arguments
         """
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
         parser.add_argument('--input',
                             help="FASTA/Q input file",
                             required=True,
                             type=lambda x: Path(x).resolve()
                             )
+        parser.add_argument('--truth',
+                            help='Location to the ground truth file.',
+                            required=True
+                            )
+
         parser.add_argument('--output',
                             help='Output of snakemake',
                             required=True,
                             type=lambda x: Path(x).resolve())
-        parser.add_argument('--dir_working',
-                            help='Working directory. If not set, it will be the output path.',
-                            default=None
-                            )
         parser.add_argument('--config_file',
-                            help='YAML file with full path to DBs',
-                            default=(Path(__file__).parent / 'config' / 'db.yml').resolve()
-                            )
-
-        parser.add_argument('--dry_run', help="Run the SnakeMake file in Dry Run mode", action='store_true')
-        parser.add_argument('--no_filter', help='Disable filtering of reads', action='store_true')
-        parser.add_argument('--classifier',
-                            choices={'bracken', 'ccmetagen', 'centrifuge', 'kaiju', 'kma', 'kraken2', 'mash', 'metaphlan',
-                                     'minimap2', 'mmseqs2', 'motus'},
-                            nargs='+',
-                            default={'bracken', 'ccmetagen', 'centrifuge', 'kaiju', 'kma', 'kraken2', 'metaphlan',
-                                     'mmseqs2', 'motus'},
-                            help='Which classifier(s) to use. Choices are %(choices)s; space separated.\n '
-                                 'Default are all.',
-                            metavar=''
-                            )
-        parser.add_argument('--truth',
-                            help='Location to the ground truth file. This will update the taxonomy in the file to the taxdump used in the '
-                                 'classifiers.',
+                            help='YAML file with location of tools and database.\n'
+                                 'Template can be found under "/snakemake/config/classifiers.yml.template"',
                             required=True
                             )
+        parser.add_argument('--classifier',
+                            nargs='+',
+                            default=['bracken', 'ccmetagen', 'centrifuge', 'kaiju', 'kma', 'kraken2', 'metaphlan',
+                                     'mmseqs2', 'motus'],
+                            help='Which classifier(s) to use. \n'
+                                 'Default choices are %(default)s; space separated.\n'
+                                 'If not set, all default choices will be used.',
+                            metavar=''
+                            )
+        parser.add_argument('--dir_working',
+                            help='Working directory. \n'
+                                 'If not set, it will be {output path} + "snakemake_conf".',
+                            default=None
+                            )
+        parser.add_argument('--dry_run', help="Run the SnakeMake file in Dry Run mode", action='store_true')
+        parser.add_argument('--no_filter', help='Disable filtering of reads (length > 1000 and quality > 7)', action='store_true')
 
         parser_args = parser.parse_args(args)
 
-        # Set working directory to output directory if not specified
-        if parser_args.dir_working is None:
-            parser_args.dir_working = parser_args.output / 'snakemake_conf'
-
         return parser_args
 
-    def _check_input(self):
+    def _check_input_arguments(self):
         """
-        Check if input file really exists
+        Check if input file really exists and arguments make sense
         """
         if not self._args.input.exists():
             logger.error(f'Input file {self._args.input} does not exist!')
-            exit()
+            sys.exit(1)
+
+        mutual_inclusive = {'ccmetagen': 'kma', 'bracken': 'kraken2'}
+        for name, dependency in mutual_inclusive.items():
+            if name in self._args.classifier and dependency not in self._args.classifier:
+                logger.error(f"Error: '{dependency}' is required when '{name}' is selected.")
+                sys.exit(1)
+
+        # Set working directory to output directory if not specified
+        if self._args.dir_working is None:
+            self._args.dir_working = self._args.output / 'snakemake_conf'
+            logger.info(f"Working DIR set to {self._args.dir_working}")
 
     def __get_config_data(self) -> Dict[str, Any]:
         """
@@ -132,13 +125,13 @@ class Classifying(object):
         """
 
         with open(self._args.config_file, 'r') as f:
-            dbs = yaml.load(f, Loader=yaml.FullLoader)
+            locations = yaml.load(f, Loader=yaml.FullLoader)
 
         return {
             'output': str(self._args.output),
             'input': {'fastq': str(self._args.input)},
             'no_filter': self._args.no_filter,
-            'db': dbs,
+            'locations': locations,
             'classifiers': self._args.classifier,
             'truth_file': self._args.truth,
             'python_scripts': str(Path(__file__).parent.resolve() / 'scripts')
@@ -150,7 +143,7 @@ class Classifying(object):
         :return: None
         """
         # Check if input exists
-        self._check_input()
+        self._check_input_arguments()
 
         run_snakemake(
             self._args.dir_working,
@@ -161,7 +154,7 @@ class Classifying(object):
 
 if __name__ == '__main__':
 
-    logger = logging.getLogger()
+    logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     if not logger.handlers:
         # create console handler and set level to debug
