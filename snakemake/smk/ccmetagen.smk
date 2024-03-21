@@ -1,4 +1,4 @@
-CCMETAGEN_ENV = CLASSIFIERS_LOCATIONS['ccmetagen']['path_env']
+CCMETAGEN_ENV = TOOLS_LOCATIONS['ccmetagen']['path_env']
 
 
 rule ccmetagan_filtering:
@@ -47,10 +47,9 @@ rule ccmetagen_taxonomy:
         db = TAXONOMY_DB
     shell:
         """
-        ml taxonkit/0.15.0;
         paste <(cut -f 1,2 {input}) \
               <(cut -f 2 {input} \
-                | taxonkit reformat -I 1 --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
+                | {TAXONKIT} reformat -I 1 --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
                 | cut -f 2,3 \
                 | awk 'BEGIN{{FS="\t"; OFS="\t"}} {{if ($1 == "unclassified" && $2 != "unclassified") {{print "missing_genus", $2}} else {{print}}}}') \
               <(cut -f 3 {input}) \

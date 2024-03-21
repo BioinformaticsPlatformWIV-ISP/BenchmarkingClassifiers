@@ -1,5 +1,5 @@
-KRAKEN2 = CLASSIFIERS_LOCATIONS['kraken2']['path']
-KRAKEN2_DB = CLASSIFIERS_LOCATIONS['kraken2']['db_path']
+KRAKEN2 = TOOLS_LOCATIONS['kraken2']['path']
+KRAKEN2_DB = TOOLS_LOCATIONS['kraken2']['db_path']
 
 rule kraken2_classification:
     """
@@ -50,10 +50,9 @@ rule kraken2_taxonomy:
         db = TAXONOMY_DB
     shell:
         """
-        ml load taxonkit;
         paste <(cut -f 2,3 {input}) <(cut -f 3 {input} \
-        | taxonkit lineage --data-dir {params.db} \
-        | taxonkit reformat --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
+        | {TAXONKIT} lineage --data-dir {params.db} \
+        | {TAXONKIT} reformat --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
         | cut -f 3,4 \
         | awk 'BEGIN{{FS="\t"; OFS="\t"}} {{if ($1 == "unclassified" && $2 != "unclassified") {{print "missing_genus", $2}} else {{print}}}}' \
         ) > {output.TSV};

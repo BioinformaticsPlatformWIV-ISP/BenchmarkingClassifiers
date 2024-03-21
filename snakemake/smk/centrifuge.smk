@@ -1,5 +1,5 @@
-CENTRIFUGE = CLASSIFIERS_LOCATIONS['centrifuge']['path']
-CENTRIFUGE_DB = CLASSIFIERS_LOCATIONS['centrifuge']['db_path']
+CENTRIFUGE = TOOLS_LOCATIONS['centrifuge']['path']
+CENTRIFUGE_DB = TOOLS_LOCATIONS['centrifuge']['db_path']
 
 
 rule centrifuge_classification:
@@ -59,11 +59,10 @@ rule centrifuge_taxonomy:
         db = TAXONOMY_DB
     shell:
         """
-        ml taxonkit/0.15.0;
         FILE=$(sed '1d' {input})
         paste <(cut -f 1,3 <<<"$FILE") <(cut -f 3 <<<"$FILE" \
-        | taxonkit lineage --data-dir {params.db} \
-        | taxonkit reformat --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
+        | {TAXONKIT} lineage --data-dir {params.db} \
+        | {TAXONKIT} reformat --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
         | cut -f 3,4 \
         | awk 'BEGIN{{FS="\t"; OFS="\t"}} {{if ($1 == "unclassified" && $2 != "unclassified") {{print "missing_genus", $2}} else {{print}}}}' \
         ) > {output.TSV};

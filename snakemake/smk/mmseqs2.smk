@@ -1,5 +1,5 @@
-MMSEQS2 = CLASSIFIERS_LOCATIONS['mmseqs2']['path']
-MMSEQS2_DB = CLASSIFIERS_LOCATIONS['mmseqs2']['db_path']
+MMSEQS2 = TOOLS_LOCATIONS['mmseqs2']['path']
+MMSEQS2_DB = TOOLS_LOCATIONS['mmseqs2']['db_path']
 
 
 rule mmseqs2_classification:
@@ -35,10 +35,9 @@ rule mmseqs2_tax:
         TAXONOMY = TAXONOMY_DB
     shell:
         """
-        ml taxonkit/0.15.0;
         export TAXONKIT_DB={params.TAXONOMY}
         cut -f 1,2 {input.TSV_mmseqs2} | \
-        taxonkit reformat --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" -I 2 \
+        {TAXONKIT} reformat --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" -I 2 \
         | awk 'BEGIN{{FS="\t"; OFS="\t"}} {{if ($3 == "unclassified" && $4 != "unclassified") {{print $1, $2, "missing_genus", $4}} else {{print}}}}' \
         > {output.TSV};
         """

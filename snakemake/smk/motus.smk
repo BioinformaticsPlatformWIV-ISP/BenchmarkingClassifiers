@@ -1,7 +1,7 @@
-MOTUS_ENV= CLASSIFIERS_LOCATIONS['motus']['path_env']
-MOTUS_DB = CLASSIFIERS_LOCATIONS['motus']['db_path']
-BWA = CLASSIFIERS_LOCATIONS['bwa']['path']
-SAMTOOLS = CLASSIFIERS_LOCATIONS['samtools']['path']
+MOTUS_ENV= TOOLS_LOCATIONS['motus']['path_env']
+MOTUS_DB = TOOLS_LOCATIONS['motus']['db_path']
+BWA = TOOLS_LOCATIONS['bwa']['path']
+SAMTOOLS = TOOLS_LOCATIONS['samtools']['path']
 
 
 rule motus_split_long_reads:
@@ -103,10 +103,9 @@ rule motus_taxonomy:
         db = TAXONOMY_DB
     shell:
         """
-        ml taxonkit;
         paste <(cut -f 1 {input.cleaned_count} \
-               | taxonkit lineage --data-dir {params.db} \
-               | taxonkit reformat --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
+               | {TAXONKIT} lineage --data-dir {params.db} \
+               | {TAXONKIT} reformat --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
                | cut -f 3,4 \
                | awk 'BEGIN{{FS="\t"; OFS="\t"}} {{if ($1 == "unclassified" && $2 != "unclassified") {{print "missing_genus", $2}} else {{print}}}}' \
                ) \

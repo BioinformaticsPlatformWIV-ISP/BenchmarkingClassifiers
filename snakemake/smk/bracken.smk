@@ -1,6 +1,6 @@
-BRACKEN = CLASSIFIERS_LOCATIONS['bracken']['path']
-BRACKEN_DB = CLASSIFIERS_LOCATIONS['bracken']['db_path']
-KRAKEN2 = CLASSIFIERS_LOCATIONS['kraken2']['path']
+BRACKEN = TOOLS_LOCATIONS['bracken']['path']
+BRACKEN_DB = TOOLS_LOCATIONS['bracken']['db_path']
+KRAKEN2 = TOOLS_LOCATIONS['kraken2']['path']
 
 
 PYTHON_SCRIPTS = config['python_scripts']
@@ -26,10 +26,9 @@ rule convert_kraken2_classification:
         SCRIPTS=PYTHON_SCRIPTS,
     shell:
         """
-        ml taxonkit/0.15.0;
         export TAXONKIT_DB={params.TAXONOMY}
         python3 {params.SCRIPTS}/make_ktaxonomy.py --nodes {params.TAXONOMY}/nodes.dmp --names {params.TAXONOMY}/names.dmp -o {output.taxonomy_db}
-        paste <(cut -f1,2 {input.TSV}) <(cut -f 3 {input.TSV} | taxonkit lineage -Lnc | awk -F '\\t' '$1==0 {{print $1;next}} {{print $2}}') \
+        paste <(cut -f1,2 {input.TSV}) <(cut -f 3 {input.TSV} | {TAXONKIT} lineage -Lnc | awk -F '\\t' '$1==0 {{print $1;next}} {{print $2}}') \
                 <(cut -f 5 {input.TSV}) > {output.TSV}
         python3 {params.SCRIPTS}/make_kreport.py -i {output.TSV} -t {output.taxonomy_db} -o {output.report}
         """
@@ -74,12 +73,11 @@ rule bracken_taxonomy:
         level=lambda wildcards: 'g' if wildcards.class_level == "genus" else 's'
     shell:
         """
-        ml load taxonkit/0.15.0;
         # save header to new file
         head -n1 {input} > {output.TSV}
         paste <(cut -f 2 {input} | tail -n+2 \
-                    | taxonkit lineage --data-dir {params.db} \
-                    | taxonkit reformat --data-dir {params.db} --format "{{{params.level}}}" --miss-rank-repl "unclassified" \
+                    | {TAXONKIT} lineage --data-dir {params.db} \
+                    | {TAXONKIT} reformat --data-dir {params.db} --format "{{{params.level}}}" --miss-rank-repl "unclassified" \
                     | cut -f 3 \
                 ) \
               <(cut -f 2- {input} | tail -n+2) \

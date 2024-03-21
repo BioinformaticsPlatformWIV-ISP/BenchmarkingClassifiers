@@ -19,6 +19,12 @@ taxonomy:
 # DEPENDENCIES #
 ################
 
+seqkit:
+  path:
+
+taxonkit:
+  path:
+
 
 {name_tool}:
   path:

@@ -1,5 +1,5 @@
-KAIJU = CLASSIFIERS_LOCATIONS['kaiju']['path']
-KAIJU_DB = CLASSIFIERS_LOCATIONS['kaiju']['db_path']
+KAIJU = TOOLS_LOCATIONS['kaiju']['path']
+KAIJU_DB = TOOLS_LOCATIONS['kaiju']['db_path']
 
 
 rule kaiju_classification:
@@ -70,10 +70,9 @@ rule kaiju_taxonomy:
         TAXONOMY = TAXONOMY_DB
     shell:
         """
-        ml taxonkit/0.15.0;
         export TAXONKIT_DB={params.TAXONOMY}
         cut -f 1,2 {input.TSV_classified} | \
-        taxonkit lineage -r -L -i 2 | taxonkit reformat --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" -I 2 \
+        {TAXONKIT} lineage -r -L -i 2 | {TAXONKIT} reformat --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" -I 2 \
         | awk 'BEGIN{{FS="\t"; OFS="\t"}} {{if ($4 == "unclassified" && $5 != "unclassified") {{print $1, $2, $3, "missing_genus", $5}} else {{print}}}}' \
         > {output.TSV_classified_tax};
         """

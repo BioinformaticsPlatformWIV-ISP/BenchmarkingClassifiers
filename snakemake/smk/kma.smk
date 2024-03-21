@@ -1,5 +1,5 @@
-KMA = CLASSIFIERS_LOCATIONS['kma']['path']
-KMA_DB = CLASSIFIERS_LOCATIONS['kma']['db_path']
+KMA = TOOLS_LOCATIONS['kma']['path']
+KMA_DB = TOOLS_LOCATIONS['kma']['db_path']
 
 rule kma_mapping:
     input:
@@ -90,10 +90,9 @@ rule kma_taxonomy:
     threads: 16
     shell:
         """
-        ml taxonkit;
         paste <(cat {input.TSV}) <(cut -f 3 {input.TSV} \
-        | taxonkit lineage -j {threads} --data-dir {params.db} \
-        | taxonkit reformat -j {threads} --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
+        | {TAXONKIT} lineage -j {threads} --data-dir {params.db} \
+        | {TAXONKIT} reformat -j {threads} --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
         | cut -f 3,4 \
         | awk 'BEGIN{{FS="\t"; OFS="\t"}} {{if ($1 == "unclassified" && $2 != "unclassified") {{print "missing_genus", $2}} else {{print}}}}' \
         ) > {output.TSV};

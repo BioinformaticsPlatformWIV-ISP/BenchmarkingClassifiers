@@ -1,6 +1,6 @@
-METAPHLAN_ENV = CLASSIFIERS_LOCATIONS['metaphlan']['path_env']
-METAPHLAN_DB = CLASSIFIERS_LOCATIONS['metaphlan']['db_path']
-BOWTIE2 = CLASSIFIERS_LOCATIONS['bowtie2']['path']
+METAPHLAN_ENV = TOOLS_LOCATIONS['metaphlan']['path_env']
+METAPHLAN_DB = TOOLS_LOCATIONS['metaphlan']['db_path']
+BOWTIE2 = TOOLS_LOCATIONS['bowtie2']['path']
 
 
 rule metaphlan_classification:
@@ -75,10 +75,9 @@ rule metaphlan_taxonomy:
         db=TAXONOMY_DB
     shell:
         """
-        ml taxonkit;
         paste <(cut -f 1 {input.cleaned_abundance} \
-               | taxonkit lineage --data-dir {params.db} \
-               | taxonkit reformat --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
+               | {TAXONKIT} lineage --data-dir {params.db} \
+               | {TAXONKIT} reformat --data-dir {params.db} --format "{{g}}\t{{s}}" --miss-rank-repl "unclassified" \
                | cut -f 3,4 \
                | awk 'BEGIN{{FS="\t"; OFS="\t"}} {{if ($1 == "unclassified" && $2 != "unclassified") {{print "missing_genus", $2}} else {{print}}}}' \
                ) \

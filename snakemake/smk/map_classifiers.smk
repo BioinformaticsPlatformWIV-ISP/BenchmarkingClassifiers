@@ -8,8 +8,10 @@ ROOT = Path(config['output'])
 LOGS = ROOT / 'logs'
 BENCH = ROOT / 'bench'
 PYTHON_SCRIPTS = config['python_scripts']
-CLASSIFIERS_LOCATIONS = config['locations']
-TAXONOMY_DB = CLASSIFIERS_LOCATIONS['taxonomy']['db_path']
+TOOLS_LOCATIONS = config['locations']
+TAXONOMY_DB = TOOLS_LOCATIONS['taxonomy']['db_path']
+SEQKIT = TOOLS_LOCATIONS['seqkit']['path']
+TAXONKIT = TOOLS_LOCATIONS['taxonkit']['path']
 
 CLASS_LEVEL = ['genus', 'species']
 # reverse bool
@@ -97,11 +99,9 @@ rule update_ground_truth:
         ROOT / "logs" / "update_{ground_truth_type}.log"
     shell:
         """
-        ml taxonkit/0.15.0
         export TAXONKIT_DB={params.TAXONOMY}
         # Create table with old_name, found taxid and new_name
-        NEW_NAMES=$(cut -f 1 -d ':' {input} | taxonkit reformat --format "{{s}}" -I 1)
-        # Print is a name will be updated
+        NEW_NAMES=$(cut -f 1 -d ':' {input} | {TAXONKIT} reformat --format "{{s}}" -I 1)
         # Print if a name will be updated
         echo "taxid\tnew_name" > {log}
         echo "$NEW_NAMES" >> {log}
@@ -128,15 +128,14 @@ rule check_output_tax:
         list_uc="no_hit|ambigious|unclassified|missing_genus|not_distributed|rounding_error"
         taxa=$(grep -vE $list_uc {input})
         uc=$(grep -E $list_uc {input})
-        ml taxonkit/0.15.0
         export TAXONKIT_DB={params.TAXONOMY}
         # Create table with old_name, found_taxid and new_name
         if [[ {wildcards.class_level} == "genus" ]]
         then
-            NEW_NAMES=$(echo "$taxa" | cut -f 1 | taxonkit name2taxid -s | taxonkit reformat --format "{{g}}" -I 2)
+            NEW_NAMES=$(echo "$taxa" | cut -f 1 | {TAXONKIT} name2taxid -s | {TAXONKIT} reformat --format "{{g}}" -I 2)
         elif [[ {wildcards.class_level} == "species" ]]
         then
-            NEW_NAMES=$(echo "$taxa" | cut -f 1 | taxonkit name2taxid -s | taxonkit reformat --format "{{s}}" -I 2)
+            NEW_NAMES=$(echo "$taxa" | cut -f 1 | {TAXONKIT} name2taxid -s | {TAXONKIT} reformat --format "{{s}}" -I 2)
         fi
         # Print if a name will be updated
         echo "level\tclassifier\ttaxid\told_name\tnew_name" > {output}
