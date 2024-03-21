@@ -102,10 +102,11 @@ rule update_ground_truth:
         # Create table with old_name, found taxid and new_name
         NEW_NAMES=$(cut -f 1 -d ':' {input} | taxonkit reformat --format "{{s}}" -I 1)
         # Print is a name will be updated
+        # Print if a name will be updated
         echo "taxid\tnew_name" > {log}
         echo "$NEW_NAMES" >> {log}
         paste -d ':' <(echo "$NEW_NAMES" | cut -f 2 | sed -e "s/\(.*\)/'\\1'/") \
-                     <(cut -f 2 -d ':' {input}) \
+                     <(grep -v '^#' {input} | cut -f 2 -d ':') \
                      > {output}
         """
 
