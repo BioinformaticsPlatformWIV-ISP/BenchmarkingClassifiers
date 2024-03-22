@@ -62,7 +62,6 @@ DATASET_ID = {'bei_resources_HM-276D_com_B_even': 'BeiRes_276',
 
 
 def main(input_path, output_plots):
-    type_sequence = 'reads'
     status = Status('')
     # status.start()
     for organism in ['genus', 'species']:
@@ -79,7 +78,7 @@ def main(input_path, output_plots):
         # Collect in a dictionary with structure dict[classifier][datasets] = {ground_truth, metric object}
 
         classifier_collection = defaultdict(dict)
-        for classifier_file in input_path.glob('**/' + type_sequence + '/' + organism + '/output_*.tsv'):
+        for classifier_file in input_path.glob('**/' + organism + '/output_*.tsv'):
             classifier_name = Path(classifier_file).stem.split('_')[-1]
             classifier_name = update_classifier_names[classifier_name]
             dataset_name = DATASET_ID[classifier_file.parts[5]]

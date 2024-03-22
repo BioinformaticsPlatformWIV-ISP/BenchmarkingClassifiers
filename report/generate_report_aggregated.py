@@ -22,7 +22,7 @@ def generate_plots(output_path: Path, input_path: Path, config_data: Dict[str, A
     Runs snakemake.
     :param output_path: Directory where data and final report is placed
     :param input_path: Directory where all output.tsv files of the classifieres reside.
-    :param config_data: Arguments of this functions which are save to a file for later reference.
+    :param config_data: Arguments of this function which are saved to a file for later reference.
     :return:None
     """
     import analysis_scripts.analysis_aggregated
@@ -118,7 +118,6 @@ class Report(object):
         parser = argparse.ArgumentParser()
         parser.add_argument('-i', '--input', metavar='', help="Output from SnakeMake flow", required=True)
         parser.add_argument('-o', '--output', metavar='', help='Location of report/figures', required=True)
-        # parser.add_argument('--dir-working', help='Working directory', default=str(Path('..').absolute()))
 
         return parser.parse_args(args)
 

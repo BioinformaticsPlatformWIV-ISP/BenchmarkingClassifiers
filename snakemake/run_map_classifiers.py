@@ -81,7 +81,8 @@ class Classifying(object):
         parser.add_argument('--classifier',
                             nargs='+',
                             default=['bracken', 'ccmetagen', 'centrifuge', 'kaiju', 'kma', 'kraken2', 'metaphlan',
-                                     'mmseqs2', 'motus'],
+                                     # 'mmseqs2',
+                                     'motus'],
                             help='Which classifier(s) to use. \n'
                                  'Default choices are %(default)s; space separated.\n'
                                  'If not set, all default choices will be used.',
