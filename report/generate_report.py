@@ -1,6 +1,6 @@
 import argparse
 import logging
-
+import sys
 import pandas as pd
 from rich.logging import RichHandler
 import yaml
@@ -23,19 +23,18 @@ def generate_plots(output_path: Path, input_path: Path, classifiers, config_data
     Runs snakemake.
     :param output_path: Directory where data and final report is placed
     :param input_path: Directory where all output.tsv files of the classifieres reside.
-    :param config_data: Arguments of this functions which are save to a file for later reference.
+    :param config_data: Arguments of this function which are saved to a file for later reference.
     :param classifiers: For which classifiers should a report be generated.
     :return:None
     """
     # Before executing any command, check if structure of input folder is correct
-    if not input_path.parts[-2:] == ('output', 'reads'):
-        logger.error(f'Please provide the correct input folder structure. Format is [name]/ouput/reads.')
-        exit()
+    if not all([(input_path / 'genus').exists(), (input_path / 'species').exists()]):
+        logger.error("One of 'genus' or 'species' subfolders does not exist. Exiting...")
+        sys.exit()
 
     # Before executing any command, check if a ground truth file is present in the input folder
-    if not (input_path.parents[1] / 'ground_truth.yml').exists():
-        logger.error(f'Please provide the file ground_truth.yml in {input_path.resolve()}')
-        logger.info(f'An example can be found in {Path(__file__).parent / "config" / "ground_truth.yml.example"}')
+    if not (input_path.parents[0] / 'ground_truth_updated.yml').exists():
+        logger.error(f'One of "ground_truth_updated.yml" or "ground_truth_updated.yml" not found in {input_path.resolve()}. Exiting..."')
         exit()
 
     import analysis_scripts.analysis

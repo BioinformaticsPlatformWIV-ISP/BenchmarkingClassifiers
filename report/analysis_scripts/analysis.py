@@ -51,7 +51,7 @@ def main(data, output_plots, allowed_classifiers):
     ########################
 
     theoretical_abundances = {}
-    for ground_truth_file in data.parents[1].glob('ground_truth*_updated.yml'):
+    for ground_truth_file in data.parents[0].glob('ground_truth*_updated.yml'):
         with open(ground_truth_file, 'r') as f:
             theoretical_abundance = {'species': yaml.load(f, Loader=yaml.FullLoader)}
         theoretical_abundance['genus'] = {}
@@ -93,16 +93,16 @@ def main(data, output_plots, allowed_classifiers):
 
         for input_classifier in sorted(data.glob(organism + '/' + '*.tsv')):
             classifier_name = input_classifier.stem.split(sep='_')[-1]
-            classifier_name = update_classifier_names[classifier_name]
+            classifier_name_display = update_classifier_names.get(classifier_name, classifier_name)
             if allowed_classifiers == 'all' or classifier_name in allowed_classifiers:
                 classifier_table = pd.read_table(
                     data_organism / input_classifier.name,
                     usecols=[0, 1],
                     index_col=0,
-                    names=[None, classifier_name],
+                    names=[None, classifier_name_display],
                     header=None
                 ).squeeze("columns")
-                classifiers_input.append(ClassificationResults(classifier_name, classifier_table, list_uc))
+                classifiers_input.append(ClassificationResults(classifier_name_display, classifier_table, list_uc))
             logger.debug(f'Read in {input_classifier}')
 
         ################
@@ -211,7 +211,7 @@ def main(data, output_plots, allowed_classifiers):
         G = GridSpec(len(classifiers_input), ROWS)
         # Add subplots from gridspec and make list
         ax = [fig.add_subplot(G[:, 0])]
-        ax.extend([fig.add_subplot(G[i, 1], sharex=fig.axes[0]) for i in range(len(classifiers_input))])
+
 
         classifier_results = []
         for classifier_result in classifiers_input:
@@ -219,9 +219,12 @@ def main(data, output_plots, allowed_classifiers):
 
         plot_ecdf(classifier_results, ax[0])
 
-        for i, classifier_results in enumerate(classifiers_input):
-            plot_ecdf_zoomed(classifier_results.only_classified(True),
-                             plt.rcParams['axes.prop_cycle'].by_key()['color'][i], ax[i + 1])
+        i = 0
+        for classifier_results in classifiers_input:
+            if not classifier_results.only_classified(True).empty:
+                ax.append(fig.add_subplot(G[i, 1], sharex=fig.axes[0]))
+                plot_ecdf_zoomed(classifier_results.only_classified(True), plt.rcParams['axes.prop_cycle'].by_key()['color'][i], ax[i + 1])
+                i += 1
 
         fig.supylabel('Count')
         fig.supxlabel('Relative abundance of reads')
@@ -239,7 +242,8 @@ def main(data, output_plots, allowed_classifiers):
         fig = plt.figure(figsize=(16, 10))
         for i, classifier_result in enumerate(classifiers_input):
             ax = fig.add_subplot(gs[i])
-            plot_tpr_fps(classifier_result.only_classified(True), ground_truth, classifier_result.classifier, ax)
+            if not classifier_result.only_classified(True).empty:
+                plot_tpr_fps(classifier_result.only_classified(True), ground_truth, classifier_result.classifier, ax)
 
         # set labels
         fig.supylabel(r'TPR $\left(\frac{TP}{TP + FN}\right)$')
@@ -258,7 +262,8 @@ def main(data, output_plots, allowed_classifiers):
         fig.suptitle(f'PR Curves')
         for i, classifier_result in enumerate(classifiers_input):
             ax = fig.add_subplot(gs[i])
-            plot_precision_recall(classifier_result.only_classified(True), ground_truth, ax)
+            if not classifier_result.only_classified(True).empty:
+                plot_precision_recall(classifier_result.only_classified(True), ground_truth, ax)
             ax.set_title(classifier_result.classifier)
         # set labels
         fig.supylabel(r'Precision $\left(\frac{TP}{TP + FP}\right)$')
