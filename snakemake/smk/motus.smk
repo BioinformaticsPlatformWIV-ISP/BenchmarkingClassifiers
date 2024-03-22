@@ -16,7 +16,8 @@ rule motus_split_long_reads:
         db = MOTUS_DB,
     shell:
         """
-        {MOTUS} prep_long -i {input} -o {output.converted_long_reads} -db {params.db}
+        . {MOTUS_ENV}/bin/activate
+        motus prep_long -i {input} -o {output.converted_long_reads} -db {params.db}
         """
 
 rule motus_classification:
