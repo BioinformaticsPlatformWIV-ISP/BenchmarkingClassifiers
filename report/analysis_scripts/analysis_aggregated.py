@@ -46,7 +46,7 @@ update_classifier_names = {"bracken": "Bracken",
 list_abundance_classifiers = ['MetaPhlAn3', 'mOTUs2']
 
 # Determines order of the classifiers in figures
-classifier_order = ['Kraken2', 'Bracken', 'KMA', 'CCMetagen', 'Centrifuge', 'Kaiju', 'MMSeqs2', 'MetaPhlAn3', 'mOTUs2']
+classifier_order_all = ['Kraken2', 'Bracken', 'KMA', 'CCMetagen', 'Centrifuge', 'Kaiju', 'MMSeqs2', 'MetaPhlAn3', 'mOTUs2']
 
 ALPH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -81,12 +81,12 @@ def main(input_path, output_plots):
         for classifier_file in input_path.glob('**/' + organism + '/output_*.tsv'):
             classifier_name = Path(classifier_file).stem.split('_')[-1]
             classifier_name = update_classifier_names[classifier_name]
-            dataset_name = DATASET_ID[classifier_file.parts[5]]
+            dataset_name = DATASET_ID.get(classifier_file.parents[2].stem, classifier_file.parents[2].stem)
             classifier_collection[classifier_name][dataset_name] = {}
             if classifier_name in list_abundance_classifiers:
-                ground_truth_file = classifier_file.parents[3] / 'ground_truth_tax_updated.yml'
+                ground_truth_file = classifier_file.parents[2] / 'ground_truth_tax_updated.yml'
             else:
-                ground_truth_file = classifier_file.parents[3] / 'ground_truth_updated.yml'
+                ground_truth_file = classifier_file.parents[2] / 'ground_truth_updated.yml'
             with open(ground_truth_file, 'r') as f:
                 theoretical_abundance = {'species': yaml.load(f, Loader=yaml.FullLoader)}
             theoretical_abundance['genus'] = {}
@@ -120,6 +120,8 @@ def main(input_path, output_plots):
                     txt_out.append(classifier_dataset_name)
             for item in np.unique(txt_out):
                 f.write("%s\n" % item)
+
+        classifier_order = [x for x in classifier_order_all if x in classifier_collection.keys()]
 
         logger.info(f'Read in files for {organism.upper()}')
 

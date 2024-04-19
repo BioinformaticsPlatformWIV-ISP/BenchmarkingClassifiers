@@ -60,7 +60,7 @@ def calculate_ti_from_si(ground_truth, lengths, fungi):
     """
     DOI: 10.1038/s41592-021-01141-3
     \frac{S_i}{T_i} = \frac{\sum_{i=0}^n \frac{R_i}{L_i}}{R_i} * L_i
-    In the formula, replace R_i can be replace by S_i because the sum of R_i is 1.
+    In the formula, R_i can be replaced by S_i because the sum of R_i is 1.
     This function only holds for species with a ploidy of 1.
 
     """

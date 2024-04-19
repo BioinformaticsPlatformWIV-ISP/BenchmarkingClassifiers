@@ -17,6 +17,8 @@ BenchmarkClassifiers is a framework designed to evaluate the performance of vari
     - [Config](#config)
     - [Taxids](#taxids)
   - [Reports](#reports)
+- [Example](#example)
+
 ## Installation
 ```
 git clone https://github.com/BioinformaticsPlatformWIV-ISP/BenchmarkingClassifiers.git
@@ -117,4 +119,52 @@ options:
   -o , --output   Location of report/figures
 ```
 
+## Example
+A subsampled dataset of [ERR2906227](https://www.ebi.ac.uk/ena/browser/view/ERR2906227) can be found in the repo under the folder`example` along with the ground truth.\
+The dataset can be classified using the command:
+```shell
+python3 run_map_classifiers.py --input /ERR2906227_subsampled.fq --truth ground_truth.yml --output example/zymo_d6300 --config classifiers.yml --classifier kma, kraken2
+```
+The output folder is organised as:
+```markdown
+zymo_d6300
+├── input                       <-- contains the filtered input dataset (length > 1000 and Q > 7)
+├── kma                         <-- contains output files of KMA 
+├── kraken2                     <-- contains output files of Kraken2
+├── logs                        <-- log files of the pipeline
+├── output                      <-- processed output of all classifier on genus/species level
+│   ├── genus
+│   │   ├── output_kma.tsv
+│   │   └── output_kraken2.tsv
+│   └── species
+│       ├── output_kma.tsv
+│       └── output_kraken2.tsv
+└── snakemake_conf              <-- SnakeMake config files
+```
 
+The `output_*.tsv` output files contain the species names and corresponding number of reads (or relative abundance for taxonomic classifiers) per line:\
+**output_kma.tsv**
+```markdown
+Bacillus spizizenii	16
+Limosilactobacillus fermentum	12
+Listeria monocytogenes	12
+Enterococcus faecalis	10
+Pseudomonas aeruginosa	4
+Salmonella enterica	4
+Escherichia coli	3
+Saccharomyces cerevisiae	3
+Staphylococcus aureus	2
+Shigella flexneri	1
+Cryptococcus neoformans	1
+no_hit	3
+```
+The report can be generated with:
+```shell
+python3 generate_report.py --input example/zymo_d6300/output/ --output example/zymo_d6300/report/
+```
+The generated report can be found under `example`
+
+An aggregated report can be generated with:
+```shell
+python3 generate_report_aggregated.py --input example/ --output report_agg/
+```

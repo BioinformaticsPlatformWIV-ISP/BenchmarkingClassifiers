@@ -143,7 +143,7 @@ class Report(object):
         generate_plots(Path(self._args.output), Path(self._args.input), self._args.classifier, self.__get_config_data())
         logger.info(f"Images created")
 
-        title = Path(self._args.input).parents[2].stem
+        title = Path(self._args.input).parents[0].stem
 
         generate_report(Path(self._args.output), title)
 
